@@ -6,7 +6,7 @@
 
 <p align="center">
   <img alt="Python" src="https://img.shields.io/badge/Python-3.10%2B-3776AB?logo=python&logoColor=white">
-  <img alt="Forecasting" src="https://img.shields.io/badge/Forecasting-Time%20Series-orange">
+  <img alt="Best Model" src="https://img.shields.io/badge/Best%20Model-XGBoost%20(WAPE%2019.11%25)-orange">
   <img alt="CI" src="https://img.shields.io/github/actions/workflow/status/JonathanMCopelandJr/inventory-demand-forecasting/run-pipeline.yml?label=pipeline&logo=githubactions&logoColor=white">
   <img alt="License" src="https://img.shields.io/badge/License-MIT-lightgrey">
   <img alt="Status" src="https://img.shields.io/badge/Status-Active-brightgreen">
@@ -18,9 +18,9 @@
 
 This project builds a **reproducible demand-forecasting and inventory-planning pipeline**, the kind of
 system a supply-chain or planning team uses to decide *how much stock to hold and when to reorder*. It
-starts from synthetic demand data, walks through exploratory analysis, fits and backtests multiple
-forecasting models, and translates the winning forecast into a concrete **inventory policy** (safety stock,
-reorder point, reorder quantity).
+starts from synthetic demand data, walks through exploratory analysis, fits and backtests six forecasting
+models, and translates the winning forecast into a concrete **inventory policy** (safety stock, reorder
+point, reorder quantity).
 
 Unlike a one-off notebook, the pipeline is automated end-to-end with **GitHub Actions**, so data generation
 and model runs can be triggered and reproduced on demand rather than by hand.
@@ -81,11 +81,11 @@ inventory-demand-forecasting/
    seasonality, and noise.
 2. **Explore** (`src/eda.py`, `notebooks/01_eda_and_modeling.md`) — Visualize demand patterns and diagnose
    seasonality/variability before modeling.
-3. **Model & evaluate** (`src/forecasting_models.py`, `src/evaluate.py`) — Fit multiple forecasting models
-   and backtest them, logging results to `reports/backtest_results.csv` and summarizing findings in
-   `reports/model_comparison.md`.
-4. **Set inventory policy** (`src/inventory_policy.py`) — Use forecast error to size **safety stock**,
-   **reorder point**, and **reorder quantity**, saved to `reports/inventory_policy.csv`.
+3. **Model & evaluate** (`src/forecasting_models.py`, `src/evaluate.py`) — Fit six forecasting models
+   (naive, seasonal naive, 7- and 28-day moving average, SARIMA, XGBoost) and backtest each across 3 rolling
+   28-day-horizon folds, logging results to `reports/backtest_results.csv`.
+4. **Set inventory policy** (`src/inventory_policy.py`) — Use forecast error from the winning model to size
+   **safety stock**, **reorder point**, and **reorder quantity**, saved to `reports/inventory_policy.csv`.
 5. **Automate** (`.github/workflows/`) — `generate-data.yml` and `run-pipeline.yml` let the whole process
    re-run in CI, so results stay reproducible without manual steps.
 
@@ -119,13 +119,28 @@ The same steps run automatically via GitHub Actions — see `.github/workflows/r
 
 ---
 
-## 📊 Outputs
+## 📊 Model Performance & Outputs
+
+Backtested across all SKUs using a 28-day forecast horizon and 3 rolling folds, **XGBoost** delivered the
+most accurate forecasts, followed by SARIMA — both clearly outperforming the moving-average and naive
+baselines.
+
+| Model | MAE | RMSE | MAPE (%) | WAPE (%) |
+|---|---|---|---|---|
+| **XGBoost** | **13.53** | **17.62** | **18.99** | **19.11** |
+| SARIMA | 14.38 | 17.98 | 20.24 | 20.42 |
+| Moving Average (28) | 16.73 | 21.10 | 25.67 | 24.19 |
+| Moving Average (7) | 17.42 | 21.48 | 27.11 | 25.02 |
+| Seasonal Naive | 17.67 | 23.34 | 26.53 | 25.46 |
+| Naive | 20.82 | 25.26 | 30.55 | 28.68 |
+
+*Lower WAPE indicates better overall forecast accuracy, weighted by volume. Full per-SKU results are available in `reports/backtest_results.csv`; the full write-up is in `reports/model_comparison.md`.*
 
 | File | Description |
 |---|---|
-| `reports/backtest_results.csv` | Forecast accuracy metrics per model, per backtest window |
-| `reports/model_comparison.md` | Narrative comparison of model performance and selection rationale |
-| `reports/inventory_policy.csv` | Recommended safety stock, reorder point, and reorder quantity |
+| `reports/backtest_results.csv` | Per-SKU, per-fold forecast accuracy metrics for all six models |
+| `reports/model_comparison.md` | Model comparison write-up and selection rationale (XGBoost selected as production model) |
+| `reports/inventory_policy.csv` | Recommended safety stock, reorder point, and reorder quantity, driven by the XGBoost forecast |
 
 For the full narrative walkthrough — motivation, modeling choices, and takeaways — see [`BLOG.md`](BLOG.md).
 
@@ -133,8 +148,8 @@ For the full narrative walkthrough — motivation, modeling choices, and takeawa
 
 ## 🧠 Skills Demonstrated
 
-- Time-series demand forecasting and model comparison
-- Backtesting methodology for forecast accuracy
+- Time-series demand forecasting and model comparison (naive, seasonal naive, moving average, SARIMA, XGBoost)
+- Backtesting methodology using rolling-fold cross-validation
 - Inventory policy design (safety stock, reorder point, reorder quantity)
 - Pipeline automation with GitHub Actions (CI/CD for data science)
 - Reproducible, script-based analytics (vs. one-off notebooks)
