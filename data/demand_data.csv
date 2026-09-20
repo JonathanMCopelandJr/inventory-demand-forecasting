@@ -1,0 +1,6 @@
+date,sku_id,category,unit_price,promo_flag,units_sold
+2024-01-01,SKU-1001,Beverages,2.73,0,83
+2024-01-02,SKU-1001,Beverages,2.73,0,92
+2024-01-03,SKU-1001,Beverages,2.73,0,103
+2024-01-04,SKU-1001,Beverages,2.73,0,101
+2024-01-05,SKU-1001,Beverages,2.73,0,67
