@@ -2,6 +2,19 @@
 
 A comprehensive, end-to-end demand forecasting project for retail inventory planning. Built to demonstrate a realistic supply-chain analytics workflow: from synthetic multi-SKU sales data generation, through exploratory data analysis, to classical statistical and machine-learning forecasting models, backtesting, and business-facing evaluation.
 
+## Results Highlight
+
+Across six SKUs and three rolling 28-day backtest folds, XGBoost delivered the best forecast accuracy of any model tested, cutting WAPE by roughly a third versus the naive baseline.
+
+| Model | WAPE (%) |
+|---|---|
+| XGBoost | 19.11 |
+| SARIMA | 20.42 |
+| Moving Average (28-day) | 24.19 |
+| Naive | 28.68 |
+
+Read the full write-up, including methodology, per-model analysis, and the inventory policy translation, in [BLOG.md](BLOG.md). Full results are in [reports/model_comparison.md](reports/model_comparison.md).
+
 ## Project Motivation
 
 Retail and CPG buyers/planners need reliable SKU-level demand forecasts to set reorder points, safety stock, and purchase quantities. This project simulates that workflow using a synthetic but realistic dataset (trend, weekly seasonality, annual seasonality, holiday spikes, and promotions) and benchmarks several forecasting approaches side by side.
@@ -22,6 +35,10 @@ inventory-demand-forecasting/
 │   └── 01_eda_and_modeling.md   # Walkthrough notebook (markdown/code cells) of the full analysis
 ├── reports/
 │   └── model_comparison.md      # Model benchmark results template
+├── .github/workflows/
+│   ├── generate-data.yml        # Auto-regenerates the synthetic dataset
+│   └── run-pipeline.yml         # Auto-runs EDA, modeling, backtesting, inventory policy
+├── BLOG.md                      # Full write-up of methodology and results
 ├── requirements.txt
 ├── .gitignore
 └── README.md
@@ -79,6 +96,8 @@ python src/evaluate.py             # backtest and produce reports/model_comparis
 python src/inventory_policy.py     # compute safety stock / reorder points
 ```
 
+This pipeline also runs automatically via GitHub Actions whenever `src/` or `data/` changes — see `.github/workflows/`.
+
 ## Tech Stack
 
 - **Python**: pandas, NumPy for data wrangling
@@ -86,6 +105,7 @@ python src/inventory_policy.py     # compute safety stock / reorder points
 - **XGBoost**: gradient-boosted tree regression with engineered lag/calendar features
 - **scikit-learn**: preprocessing and evaluation metrics
 - **Matplotlib**: exploratory and diagnostic visualizations
+- **GitHub Actions**: automated data generation and pipeline execution
 
 ## Business Application
 
