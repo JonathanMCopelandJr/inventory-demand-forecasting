@@ -1,121 +1,153 @@
-# Inventory Demand Forecasting
+<h1 align="center">📦 Inventory Demand Forecasting</h1>
 
-A comprehensive, end-to-end demand forecasting project for retail inventory planning. Built to demonstrate a realistic supply-chain analytics workflow: from synthetic multi-SKU sales data generation, through exploratory data analysis, to classical statistical and machine-learning forecasting models, backtesting, and business-facing evaluation.
+<p align="center">
+  <em>End-to-end demand forecasting and inventory policy pipeline — from synthetic data generation to backtested models and reorder-point recommendations.</em>
+</p>
 
-## Results Highlight
+<p align="center">
+  <img alt="Python" src="https://img.shields.io/badge/Python-3.10%2B-3776AB?logo=python&logoColor=white">
+  <img alt="Forecasting" src="https://img.shields.io/badge/Forecasting-Time%20Series-orange">
+  <img alt="CI" src="https://img.shields.io/github/actions/workflow/status/JonathanMCopelandJr/inventory-demand-forecasting/run-pipeline.yml?label=pipeline&logo=githubactions&logoColor=white">
+  <img alt="License" src="https://img.shields.io/badge/License-MIT-lightgrey">
+  <img alt="Status" src="https://img.shields.io/badge/Status-Active-brightgreen">
+</p>
 
-Across six SKUs and three rolling 28-day backtest folds, XGBoost delivered the best forecast accuracy of any model tested, cutting WAPE by roughly a third versus the naive baseline.
+---
 
-| Model | WAPE (%) |
-|---|---|
-| XGBoost | 19.11 |
-| SARIMA | 20.42 |
-| Moving Average (28-day) | 24.19 |
-| Naive | 28.68 |
+## 📌 Overview
 
-Read the full write-up, including methodology, per-model analysis, and the inventory policy translation, in [BLOG.md](BLOG.md). Full results are in [reports/model_comparison.md](reports/model_comparison.md).
+This project builds a **reproducible demand-forecasting and inventory-planning pipeline**, the kind of
+system a supply-chain or planning team uses to decide *how much stock to hold and when to reorder*. It
+starts from synthetic demand data, walks through exploratory analysis, fits and backtests multiple
+forecasting models, and translates the winning forecast into a concrete **inventory policy** (safety stock,
+reorder point, reorder quantity).
 
-## Project Motivation
+Unlike a one-off notebook, the pipeline is automated end-to-end with **GitHub Actions**, so data generation
+and model runs can be triggered and reproduced on demand rather than by hand.
 
-Retail and CPG buyers/planners need reliable SKU-level demand forecasts to set reorder points, safety stock, and purchase quantities. This project simulates that workflow using a synthetic but realistic dataset (trend, weekly seasonality, annual seasonality, holiday spikes, and promotions) and benchmarks several forecasting approaches side by side.
+| Stage | Component | Purpose |
+|---|---|---|
+| **Generate** | `src/generate_data.py` | Create synthetic demand history |
+| **Explore** | `src/eda.py`, `notebooks/01_eda_and_modeling.md` | Understand trend, seasonality, and variability |
+| **Model** | `src/forecasting_models.py` | Fit and compare forecasting models |
+| **Evaluate** | `src/evaluate.py`, `reports/backtest_results.csv`, `reports/model_comparison.md` | Backtest accuracy across models |
+| **Plan** | `src/inventory_policy.py`, `reports/inventory_policy.csv` | Convert forecasts into reorder policy |
+| **Automate** | `.github/workflows/` | CI pipelines for data generation and full pipeline runs |
 
-## Repository Structure
+---
+
+## 🗂️ Repository Structure
 
 ```
 inventory-demand-forecasting/
+├── .github/
+│   └── workflows/
+│       ├── generate-data.yml       # CI job: regenerate synthetic demand data
+│       └── run-pipeline.yml        # CI job: run full forecasting pipeline
 ├── data/
-│   └── demand_data.csv          # Synthetic daily SKU-level sales data (2 years, 6 SKUs)
-├── src/
-│   ├── generate_data.py         # Synthetic data generator (trend/seasonality/promos/holidays)
-│   ├── eda.py                   # Exploratory data analysis + chart generation
-│   ├── forecasting_models.py    # Naive, Moving Average, SARIMA, and XGBoost models
-│   ├── evaluate.py              # Backtesting harness + MAE/RMSE/MAPE/WAPE metrics
-│   └── inventory_policy.py      # Safety stock & reorder point calculations from forecasts
+│   └── demand_data.csv             # Synthetic demand history
 ├── notebooks/
-│   └── 01_eda_and_modeling.md   # Walkthrough notebook (markdown/code cells) of the full analysis
+│   └── 01_eda_and_modeling.md      # Exploratory analysis & modeling walkthrough
 ├── reports/
-│   └── model_comparison.md      # Model benchmark results template
-├── .github/workflows/
-│   ├── generate-data.yml        # Auto-regenerates the synthetic dataset
-│   └── run-pipeline.yml         # Auto-runs EDA, modeling, backtesting, inventory policy
-├── BLOG.md                      # Full write-up of methodology and results
+│   ├── backtest_results.csv        # Backtested forecast accuracy by model
+│   ├── inventory_policy.csv        # Recommended safety stock / reorder point / reorder qty
+│   └── model_comparison.md         # Model comparison write-up
+├── src/
+│   ├── generate_data.py            # Synthetic data generator
+│   ├── eda.py                      # Exploratory data analysis
+│   ├── forecasting_models.py       # Forecasting model definitions
+│   ├── evaluate.py                 # Backtesting & accuracy evaluation
+│   └── inventory_policy.py         # Safety stock / reorder point logic
+├── BLOG.md                         # Narrative write-up of the project
+├── LICENSE
 ├── requirements.txt
-├── .gitignore
 └── README.md
 ```
 
-## Dataset
+---
 
-`data/demand_data.csv` contains 4,380 rows: daily unit sales for 6 SKUs across 6 categories (Beverages, Snacks, Dairy, Frozen Foods, Household, Personal Care) from 2024-01-01 through 2025-12-30.
+## 🔑 Key Questions Answered
 
-| Column | Description |
-|---|---|
-| `date` | Calendar date (daily granularity) |
-| `sku_id` | Unique SKU identifier |
-| `category` | Product category |
-| `unit_price` | Unit price in USD |
-| `promo_flag` | 1 if a promotion was active that day, else 0 |
-| `units_sold` | Target variable — daily units sold |
+- Which forecasting approach best captures the **trend and seasonality** in demand?
+- How accurate is each model when backtested against held-out history?
+- Given forecast uncertainty, what **safety stock and reorder point** should a planner set?
+- Can the entire pipeline — from raw data to inventory policy — run automatically and reproducibly?
 
-The data embeds an upward trend, day-of-week seasonality, annual seasonality (with a phase shift so each category peaks at a different time of year), holiday demand spikes (Thanksgiving/Christmas/New Year/July 4th), random promotional lifts, and Gaussian noise — designed to resemble real POS extracts.
+---
 
-## Methodology
+## ⚙️ How It Works
 
-1. **Data generation** (`generate_data.py`): builds the synthetic panel dataset described above so the project is fully reproducible without needing a private data source.
-2. **EDA** (`eda.py`): computes summary statistics, decomposes trend/seasonality, and visualizes demand by SKU, category, weekday, and promotion status.
-3. **Forecasting models** (`forecasting_models.py`):
-   - **Naive / seasonal naive** baseline (last value, last-week-same-day)
-   - **Moving average** baselines (7-day, 28-day rolling windows)
-   - **SARIMA** (statsmodels) capturing weekly seasonality
-   - **XGBoost regressor** using lag, rolling-window, and calendar features
-4. **Evaluation** (`evaluate.py`): walk-forward backtesting (rolling-origin cross-validation) with MAE, RMSE, MAPE, and WAPE, reported per SKU and in aggregate.
-5. **Inventory policy** (`inventory_policy.py`): converts forecasts and forecast error into safety stock and reorder-point recommendations using a service-level (z-score) approach.
+1. **Generate data** (`src/generate_data.py`) — Produce a synthetic but realistic demand series with trend,
+   seasonality, and noise.
+2. **Explore** (`src/eda.py`, `notebooks/01_eda_and_modeling.md`) — Visualize demand patterns and diagnose
+   seasonality/variability before modeling.
+3. **Model & evaluate** (`src/forecasting_models.py`, `src/evaluate.py`) — Fit multiple forecasting models
+   and backtest them, logging results to `reports/backtest_results.csv` and summarizing findings in
+   `reports/model_comparison.md`.
+4. **Set inventory policy** (`src/inventory_policy.py`) — Use forecast error to size **safety stock**,
+   **reorder point**, and **reorder quantity**, saved to `reports/inventory_policy.csv`.
+5. **Automate** (`.github/workflows/`) — `generate-data.yml` and `run-pipeline.yml` let the whole process
+   re-run in CI, so results stay reproducible without manual steps.
 
-## Key Metrics
+---
 
-Forecast accuracy is evaluated with:
-
-- **MAE** (Mean Absolute Error) — average magnitude of forecast error in units
-- **RMSE** (Root Mean Squared Error) — penalizes large misses more heavily
-- **MAPE** (Mean Absolute Percentage Error) — scale-independent accuracy
-- **WAPE** (Weighted Absolute Percentage Error) — more robust than MAPE for intermittent/low-volume SKUs
-
-Results for each model, per SKU, are written to `reports/model_comparison.md`.
-
-## Getting Started
+## 🚀 Getting Started
 
 ```bash
+# 1. Clone the repository
 git clone https://github.com/JonathanMCopelandJr/inventory-demand-forecasting.git
 cd inventory-demand-forecasting
+
+# 2. Install dependencies
 pip install -r requirements.txt
 
-python src/generate_data.py        # regenerate data/demand_data.csv
-python src/eda.py                  # run EDA, save charts to reports/figures/
-python src/forecasting_models.py   # train and forecast with all models
-python src/evaluate.py             # backtest and produce reports/model_comparison.md
-python src/inventory_policy.py     # compute safety stock / reorder points
+# 3. Generate synthetic demand data
+python src/generate_data.py
+
+# 4. Run exploratory analysis
+python src/eda.py
+
+# 5. Fit models and backtest
+python src/forecasting_models.py
+python src/evaluate.py
+
+# 6. Compute the inventory policy
+python src/inventory_policy.py
 ```
 
-This pipeline also runs automatically via GitHub Actions whenever `src/` or `data/` changes — see `.github/workflows/`.
+The same steps run automatically via GitHub Actions — see `.github/workflows/run-pipeline.yml`.
 
-## Tech Stack
+---
 
-- **Python**: pandas, NumPy for data wrangling
-- **Statsmodels**: SARIMA time-series modeling
-- **XGBoost**: gradient-boosted tree regression with engineered lag/calendar features
-- **scikit-learn**: preprocessing and evaluation metrics
-- **Matplotlib**: exploratory and diagnostic visualizations
-- **GitHub Actions**: automated data generation and pipeline execution
+## 📊 Outputs
 
-## Business Application
+| File | Description |
+|---|---|
+| `reports/backtest_results.csv` | Forecast accuracy metrics per model, per backtest window |
+| `reports/model_comparison.md` | Narrative comparison of model performance and selection rationale |
+| `reports/inventory_policy.csv` | Recommended safety stock, reorder point, and reorder quantity |
 
-This mirrors a real buyer/planner workflow: generate SKU-level forecasts, quantify forecast uncertainty, then translate that uncertainty into safety stock and reorder points so purchasing decisions are grounded in both expected demand and its variability, rather than a single point estimate.
+For the full narrative walkthrough — motivation, modeling choices, and takeaways — see [`BLOG.md`](BLOG.md).
 
-## Author
+---
 
-**Jonathan M. Copeland Jr.** — Buyer Planner | Data Analytics M.S. | SQL, Python, Excel, Forecasting, Supply Chain Analytics
-[Portfolio site](https://jonathanmcopelandjr.com/)
+## 🧠 Skills Demonstrated
 
-## License
+- Time-series demand forecasting and model comparison
+- Backtesting methodology for forecast accuracy
+- Inventory policy design (safety stock, reorder point, reorder quantity)
+- Pipeline automation with GitHub Actions (CI/CD for data science)
+- Reproducible, script-based analytics (vs. one-off notebooks)
 
-MIT License — free to use, modify, and build upon with attribution.
+---
+
+## 👤 Author
+
+**Jonathan M. Copeland Jr.**
+Buyer Planner · M.S. Data Analytics · SQL · Python · Excel · Forecasting · Supply Chain Analytics
+
+[Portfolio](https://jonathanmcopelandjr.com/) · [GitHub](https://github.com/JonathanMCopelandJr)
+
+---
+
+<p align="center"><sub>Built as part of a hands-on supply-chain analytics portfolio project.</sub></p>
