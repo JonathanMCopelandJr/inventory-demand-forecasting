@@ -26,7 +26,7 @@ DATA_PATH = os.path.join("data", "demand_data.csv")
 
 def load_sku_series(df, sku_id):
     sub = df[df["sku_id"] == sku_id].sort_values("date")
-    series = sub.set_index("date")["units_sold"].asfreq("D").fillna(method="ffill")
+    series = sub.set_index("date")["units_sold"].asfreq("D").ffill()
     return series
 
 
